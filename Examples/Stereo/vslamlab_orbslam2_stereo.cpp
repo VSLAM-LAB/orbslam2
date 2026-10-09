@@ -5,8 +5,6 @@
 #include<thread>
 #include<opencv2/core/core.hpp>
 
-#include <unistd.h>
-
 #include<System.h>
 
 #include <sstream>
@@ -152,7 +150,7 @@ int main(int argc, char **argv)
                 T = tframe - timestamps[ni-1];
 
             if(ttrack < T)
-                usleep((T-ttrack)  * 1e6);
+                std::this_thread::sleep_for(std::chrono::duration<ORB_SLAM2::Seconds>(T - ttrack));
 
         }
 

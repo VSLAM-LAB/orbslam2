@@ -25,8 +25,13 @@ target_compile_options(dbow2_warnings INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
-# Optimization/Architecture flags
-set(DBOW2_OPTIMIZATION_FLAGS -O3 -march=native) 
+# Optimization/Architecture flags (-O3 comes with the Release build type). -march=native ties the binaries to
+# the build machine's CPU, so it is opt-in (local builds: build.sh); MSVC needs /bigobj for the Eigen-heavy code
+option(ORBSLAM2_NATIVE "Optimize for the build machine's CPU (-march=native)" OFF)
+set(DBOW2_OPTIMIZATION_FLAGS
+    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+    $<$<AND:$<BOOL:${ORBSLAM2_NATIVE}>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-march=native>
+)
 
 # Configuration Header
 configure_file(DBoW2/DBoW2.cmake.in "${PROJECT_BINARY_DIR}/DBoW2Config.cmake" @ONLY)
@@ -42,8 +47,9 @@ set(SRCS_DUTILS
   DUtils/Random.cpp
   DUtils/Timestamp.cpp)
 
-# Create shared library
-add_library(${PROJECT_NAME} SHARED ${SRCS_DBOW2} ${SRCS_DUTILS} )
+# Create static library (linked into libORB_SLAM2)
+add_library(${PROJECT_NAME} STATIC ${SRCS_DBOW2} ${SRCS_DUTILS})
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Apply warnings and optimization flags
 target_link_libraries(${PROJECT_NAME} PRIVATE dbow2_warnings)

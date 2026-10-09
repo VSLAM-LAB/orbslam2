@@ -26,8 +26,13 @@ target_compile_options(g2o_warnings INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
-# Optimization/Architecture flags
-set(G2O_OPTIMIZATION_FLAGS -O3 -march=native) 
+# Optimization/Architecture flags (-O3 comes with the Release build type). -march=native ties the binaries to
+# the build machine's CPU, so it is opt-in (local builds: build.sh); MSVC needs /bigobj for the Eigen-heavy code
+option(ORBSLAM2_NATIVE "Optimize for the build machine's CPU (-march=native)" OFF)
+set(G2O_OPTIMIZATION_FLAGS
+    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+    $<$<AND:$<BOOL:${ORBSLAM2_NATIVE}>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-march=native>
+)
 
 # Workaround for MSVC90
 if(MSVC90)
@@ -35,9 +40,12 @@ if(MSVC90)
   message(STATUS "Disabling memory alignment for MSVC8")
 endif()
 
-# Define UNIX macro explicitly
-add_definitions(-DUNIX)
-message(STATUS "Compiling on Unix")
+# Platform macro used by g2o/stuff
+if(WIN32)
+  add_definitions(-DWINDOWS)
+else()
+  add_definitions(-DUNIX)
+endif()
 
 # Configuration Header
 set(G2O_CXX_COMPILER "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER}")
@@ -79,8 +87,9 @@ set(G2O_SOURCE_FILES
         g2o/stuff/property.cpp
 )
 
-# Create shared library
-add_library(${PROJECT_NAME} SHARED ${G2O_SOURCE_FILES})
+# Create static library (linked into libORB_SLAM2)
+add_library(${PROJECT_NAME} STATIC ${G2O_SOURCE_FILES})
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Apply warnings and optimization flags
 target_link_libraries(${PROJECT_NAME} PRIVATE g2o_warnings)

@@ -18,6 +18,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 # Dependencies
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(Threads REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -32,10 +33,16 @@ target_compile_options(orbslam2_warnings INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
-# Optimization/Architecture flags
-set(ORBSLAM2_OPTIMIZATION_FLAGS -O3 -march=native) 
+# Optimization/Architecture flags (-O3 comes with the Release build type). -march=native ties the binaries to
+# the build machine's CPU, so it is opt-in (local builds: build.sh); MSVC needs /bigobj for the Eigen-heavy code
+option(ORBSLAM2_NATIVE "Optimize for the build machine's CPU (-march=native)" OFF)
+set(ORBSLAM2_OPTIMIZATION_FLAGS
+    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+    $<$<AND:$<BOOL:${ORBSLAM2_NATIVE}>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-march=native>
+)
 
-# Create shared library
+# Create shared library (MSVC: export all its symbols, the sources have no __declspec annotations)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 add_library(${PROJECT_NAME} SHARED
         src/System.cc
         src/Tracking.cc
@@ -79,6 +86,7 @@ target_link_libraries(${PROJECT_NAME}
     ${Pangolin_LIBRARIES}
     PUBLIC DBoW2
     PUBLIC g2o
+    PUBLIC Threads::Threads
 )
 
 # Example executables
