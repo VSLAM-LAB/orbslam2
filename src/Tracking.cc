@@ -1576,8 +1576,10 @@ void Tracking::getCameraIntrinsics(cv::Mat& K, cv::Mat& distCoef, const YAML::No
 
 YAML::Node Tracking::getCamera(const std::string& cam_name, const YAML::Node& cameras){
     for (int i{0}; i < cameras.size(); ++i) 
-        if (cameras[i]["cam_name"].as<std::string>() == cam_name) 
+        if (cameras[i]["cam_name"].as<std::string>() == cam_name)
             return cameras[i];
+    cout << "[Error] Camera '" << cam_name << "' not found in the calibration. Terminating!" << endl;
+    exit(EXIT_FAILURE);
 }
 
 float Tracking::getStereoRectification(cv::Mat& M1l_, cv::Mat& M2l_, cv::Mat& M1r_, cv::Mat& M2r_,

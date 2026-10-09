@@ -19,3 +19,8 @@ cmake-build-debug/
 
 install_orbslam2.txt
 install_orbslam2-dev.txt
+
+# pixi
+.pixi/
+channel/
+output/

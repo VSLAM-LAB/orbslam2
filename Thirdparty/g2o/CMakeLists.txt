@@ -26,13 +26,6 @@ target_compile_options(g2o_warnings INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
-# Optimization/Architecture flags (-O3 comes with the Release build type). -march=native ties the binaries to
-# the build machine's CPU, so it is opt-in (local builds: build.sh); MSVC needs /bigobj for the Eigen-heavy code
-option(ORBSLAM2_NATIVE "Optimize for the build machine's CPU (-march=native)" OFF)
-set(G2O_OPTIMIZATION_FLAGS
-    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-    $<$<AND:$<BOOL:${ORBSLAM2_NATIVE}>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-march=native>
-)
 
 # Workaround for MSVC90
 if(MSVC90)
@@ -91,9 +84,8 @@ set(G2O_SOURCE_FILES
 add_library(${PROJECT_NAME} STATIC ${G2O_SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# Apply warnings and optimization flags
+# Apply warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE g2o_warnings)
-target_compile_options(${PROJECT_NAME} PRIVATE ${G2O_OPTIMIZATION_FLAGS})
 
 # Set include directories for the target
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -104,18 +96,20 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # Link dependencies
 target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
 
-# Install targets and headers
-install(TARGETS ${PROJECT_NAME}
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include)
+# Install targets and headers, only when built on its own (inside ORB-SLAM2 it is linked statically)
+if(PROJECT_IS_TOP_LEVEL)
+  install(TARGETS ${PROJECT_NAME}
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib
+          RUNTIME DESTINATION bin
+          INCLUDES DESTINATION include)
 
-# Install configuration header
-install(FILES ${PROJECT_SOURCE_DIR}/config.h DESTINATION include/g2o)
+  # Install configuration header
+  install(FILES ${PROJECT_SOURCE_DIR}/config.h DESTINATION include/g2o)
 
-# Install all other public headers
-install(DIRECTORY g2o/core g2o/types g2o/stuff
-        DESTINATION include/g2o
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-)
+  # Install all other public headers
+  install(DIRECTORY g2o/core g2o/types g2o/stuff
+          DESTINATION include/g2o
+          FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+  )
+endif()

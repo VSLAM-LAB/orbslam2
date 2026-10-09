@@ -22,6 +22,17 @@ find_package(Threads REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+# Optimization/Architecture flags (-O3 comes with the Release build type), for every target in the tree: Eigen picks
+# its memory alignment from the instruction set, so all objects of the process must be compiled with the same flags
+# (mixing them makes an object allocated with one alignment scheme be freed with the other). -march=native ties the
+# binaries to the build machine's CPU, so it is opt-in (local builds); MSVC needs /bigobj for the Eigen-heavy code
+option(ORBSLAM2_NATIVE "Optimize for the build machine's CPU (-march=native)" OFF)
+if(MSVC)
+    add_compile_options(/bigobj)
+elseif(ORBSLAM2_NATIVE)
+    add_compile_options(-march=native)
+endif()
+
 # DBoW2 and g2o from Thirdparty folders
 add_subdirectory(Thirdparty/DBoW2)
 add_subdirectory(Thirdparty/g2o)
@@ -33,13 +44,6 @@ target_compile_options(orbslam2_warnings INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
-# Optimization/Architecture flags (-O3 comes with the Release build type). -march=native ties the binaries to
-# the build machine's CPU, so it is opt-in (local builds: build.sh); MSVC needs /bigobj for the Eigen-heavy code
-option(ORBSLAM2_NATIVE "Optimize for the build machine's CPU (-march=native)" OFF)
-set(ORBSLAM2_OPTIMIZATION_FLAGS
-    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-    $<$<AND:$<BOOL:${ORBSLAM2_NATIVE}>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-march=native>
-)
 
 # Create shared library (MSVC: export all its symbols, the sources have no __declspec annotations)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -65,9 +69,8 @@ add_library(${PROJECT_NAME} SHARED
         src/Viewer.cc
 )
 
-# Apply warnings and optimization flags
+# Apply warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE orbslam2_warnings)
-target_compile_options(${PROJECT_NAME} PRIVATE ${ORBSLAM2_OPTIMIZATION_FLAGS})
 
 # Set include directories for the target
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -99,20 +102,9 @@ target_link_libraries(vslamlab_orbslam2_rgbd ${PROJECT_NAME})
 add_executable(vslamlab_orbslam2_stereo Examples/Stereo/vslamlab_orbslam2_stereo.cpp)
 target_link_libraries(vslamlab_orbslam2_stereo ${PROJECT_NAME})
 
-# Install targets and headers
-install(TARGETS ${PROJECT_NAME} vslamlab_orbslam2_mono
+# Install the library and the executables (no headers: the conda package only provides the executables, and the
+# generic header names would clash with other packages in the environment)
+install(TARGETS ${PROJECT_NAME} vslamlab_orbslam2_mono vslamlab_orbslam2_rgbd vslamlab_orbslam2_stereo
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-
-install(TARGETS ${PROJECT_NAME} vslamlab_orbslam2_rgbd
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-
-install(TARGETS ${PROJECT_NAME} vslamlab_orbslam2_stereo
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-
-install(DIRECTORY include/ DESTINATION include)

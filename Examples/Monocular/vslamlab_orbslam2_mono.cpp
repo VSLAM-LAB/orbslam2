@@ -39,6 +39,12 @@ int main(int argc, char **argv)
     bool verbose{true};
 
     string vocabulary{"Vocabulary/ORBvoc.txt"};
+    if (argc > 1 && std::string(argv[1]) == "--help") {
+        cout << "Usage: vslamlab_orbslam2_mono sequence_path:<dir> calibration_yaml:<file> rgb_csv:<file> exp_folder:<dir>"
+             << " [exp_id:<n>] [settings_yaml:<file>] [verbose:<0|1>] [vocabulary:<ORBvoc.txt>]" << endl;
+        return 0;
+    }
+
     cout << endl;
     for (int i = 0; i < argc; ++i) {
         std::string arg = argv[i];
