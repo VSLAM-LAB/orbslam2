@@ -51,6 +51,8 @@ install = { cmd = "cmake -G Ninja -B build -S . -DCMAKE_BUILD_TYPE=Release -DORB
 execute-mono = "./bin/vslamlab_orbslam2_mono"
 execute-rgbd = "./bin/vslamlab_orbslam2_rgbd"
 execute-stereo = "./bin/vslamlab_orbslam2_stereo"
+# Online on an ARStream relay (VSLAM-LAB: `pixi run stream-iphone`), see Examples/Monocular/vslamlab_orbslam2_mono_stream.cpp
+execute-mono-stream = "./bin/vslamlab_orbslam2_mono_stream"
 test = "./bin/vslamlab_orbslam2_mono --help && ./bin/vslamlab_orbslam2_rgbd --help && ./bin/vslamlab_orbslam2_stereo --help && echo OK"
 
 [dev]
@@ -59,3 +61,7 @@ orbslam2 = { path = "." }  # installs the [package] build/host/run dependencies,
 [dependencies]
 cmake = "*"
 ninja = "*"
+# ARStream C++ subscriber (header-only) for vslamlab_orbslam2_mono_stream, built by pixi-build from the arstream
+# repository's cpp/ package (not yet on the vslamlab channel; once published, `libarstream = "*"` from
+# https://prefix.dev/vslamlab/vslamlab also belongs in [package.host-dependencies])
+libarstream = { git = "https://github.com/VSLAM-LAB/arstream.git", subdirectory = "cpp" }
