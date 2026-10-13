@@ -18,7 +18,7 @@ preview = ["pixi-build"]
 # ORBvoc.txt is not packaged: VSLAM-LAB downloads it (huggingface.co/vslamlab/orbslam2_vocabulary).
 [package]
 name = "orbslam2"
-version = "1.2"
+version = "1.3"
 description = "ORB-SLAM2: real-time SLAM for monocular, stereo and RGB-D cameras"
 authors = ["Raul Mur-Artal", "Juan D. Tardos", "J. M. M. Montiel", "Dorian Galvez-Lopez"]
 license = "GPL-3.0-only"
@@ -37,7 +37,7 @@ pangolin-opengl = "*"
 # ARStream C++ subscriber (header-only, github.com/VSLAM-LAB/arstream) for vslamlab_orbslam2_{mono,rgbd}_stream, the
 # online entry points on an ARStream relay (VSLAM-LAB: `pixi run stream-iphone --run orbslam2 [--mode rgbd]`);
 # 0.2 adds the LiDAR depth of the rgbd one
-libarstream = { version = ">=0.2", channel = "https://prefix.dev/vslamlab/vslamlab" }
+libarstream = { version = ">=0.2.1", channel = "https://prefix.dev/vslamlab/vslamlab" }
 
 [package.host-dependencies."if(host_platform == 'linux-64')"]
 libgl-devel = "*"       # Pangolin's CMake config: find_package(OpenGL)
@@ -45,7 +45,7 @@ libopengl-devel = "*"
 
 [package.run-dependencies]
 pangolin-opengl = "*"
-libarstream = { version = ">=0.2", channel = "https://prefix.dev/vslamlab/vslamlab" }  # its run dependencies: zeromq
+libarstream = { version = ">=0.2.1", channel = "https://prefix.dev/vslamlab/vslamlab" }  # its run dependencies: zeromq
 
 ########################################################################################################################
 # Workspace: development environment. `pixi run install` compiles this repo in place (bin/, lib/) for the local CPU
