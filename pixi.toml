@@ -13,11 +13,12 @@ preview = ["pixi-build"]
 # Package. Release: from a clean checkout of a tagged commit (CI does this, see .github/workflows/conda-package.yml)
 #   pixi publish --clean --target-dir output
 #   pixi upload prefix --channel vslamlab/vslamlab output/*.conda
-# Builds libORB_SLAM2 (DBoW2 and g2o linked in statically) and the vslamlab_orbslam2_{mono,rgbd,stereo,mono_stream}
-# executables. ORBvoc.txt is not packaged: VSLAM-LAB downloads it (huggingface.co/vslamlab/orbslam2_vocabulary).
+# Builds libORB_SLAM2 (DBoW2 and g2o linked in statically) and the
+# vslamlab_orbslam2_{mono,rgbd,stereo,mono_stream,rgbd_stream} executables.
+# ORBvoc.txt is not packaged: VSLAM-LAB downloads it (huggingface.co/vslamlab/orbslam2_vocabulary).
 [package]
 name = "orbslam2"
-version = "1.1"
+version = "1.2"
 description = "ORB-SLAM2: real-time SLAM for monocular, stereo and RGB-D cameras"
 authors = ["Raul Mur-Artal", "Juan D. Tardos", "J. M. M. Montiel", "Dorian Galvez-Lopez"]
 license = "GPL-3.0-only"
@@ -33,9 +34,10 @@ libopencv = "<5"        # OpenCV 5 moved features2d out of the main modules
 eigen = "*"
 yaml-cpp = "*"
 pangolin-opengl = "*"
-# ARStream C++ subscriber (header-only, github.com/VSLAM-LAB/arstream) for vslamlab_orbslam2_mono_stream, the online
-# entry point on an ARStream relay (VSLAM-LAB: `pixi run stream-iphone --run orbslam2`)
-libarstream = { version = "*", channel = "https://prefix.dev/vslamlab/vslamlab" }
+# ARStream C++ subscriber (header-only, github.com/VSLAM-LAB/arstream) for vslamlab_orbslam2_{mono,rgbd}_stream, the
+# online entry points on an ARStream relay (VSLAM-LAB: `pixi run stream-iphone --run orbslam2 [--mode rgbd]`);
+# 0.2 adds the LiDAR depth of the rgbd one
+libarstream = { version = ">=0.2", channel = "https://prefix.dev/vslamlab/vslamlab" }
 
 [package.host-dependencies."if(host_platform == 'linux-64')"]
 libgl-devel = "*"       # Pangolin's CMake config: find_package(OpenGL)
@@ -43,7 +45,7 @@ libopengl-devel = "*"
 
 [package.run-dependencies]
 pangolin-opengl = "*"
-libarstream = { version = "*", channel = "https://prefix.dev/vslamlab/vslamlab" }  # its run dependencies: zeromq
+libarstream = { version = ">=0.2", channel = "https://prefix.dev/vslamlab/vslamlab" }  # its run dependencies: zeromq
 
 ########################################################################################################################
 # Workspace: development environment. `pixi run install` compiles this repo in place (bin/, lib/) for the local CPU
@@ -55,9 +57,11 @@ install = { cmd = "cmake -G Ninja -B build -S . -DCMAKE_BUILD_TYPE=Release -DORB
 execute-mono = "./bin/vslamlab_orbslam2_mono"
 execute-rgbd = "./bin/vslamlab_orbslam2_rgbd"
 execute-stereo = "./bin/vslamlab_orbslam2_stereo"
-# Online on an ARStream relay (VSLAM-LAB: `pixi run stream-iphone`), see Examples/Monocular/vslamlab_orbslam2_mono_stream.cpp
+# Online on an ARStream relay (VSLAM-LAB: `pixi run stream-iphone --run orbslam2-dev [--mode rgbd]`), see
+# Examples/Monocular/vslamlab_orbslam2_mono_stream.cpp and Examples/RGB-D/vslamlab_orbslam2_rgbd_stream.cpp
 execute-mono-stream = "./bin/vslamlab_orbslam2_mono_stream"
-test = "./bin/vslamlab_orbslam2_mono --help && ./bin/vslamlab_orbslam2_rgbd --help && ./bin/vslamlab_orbslam2_stereo --help && echo OK"
+execute-rgbd-stream = "./bin/vslamlab_orbslam2_rgbd_stream"
+test = "./bin/vslamlab_orbslam2_mono --help && ./bin/vslamlab_orbslam2_rgbd --help && ./bin/vslamlab_orbslam2_stereo --help && ./bin/vslamlab_orbslam2_mono_stream --help && ./bin/vslamlab_orbslam2_rgbd_stream --help && echo OK"
 
 [dev]
 orbslam2 = { path = "." }  # installs the [package] build/host/run dependencies, not orbslam2 itself

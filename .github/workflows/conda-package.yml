@@ -56,7 +56,8 @@ jobs:
       # Runs the executables from a fresh environment: checks they are packaged and all their libraries resolve
       - name: Test
         run: |
-          for exe in vslamlab_orbslam2_mono vslamlab_orbslam2_rgbd vslamlab_orbslam2_stereo vslamlab_orbslam2_mono_stream; do
+          for exe in vslamlab_orbslam2_mono vslamlab_orbslam2_rgbd vslamlab_orbslam2_stereo \
+                     vslamlab_orbslam2_mono_stream vslamlab_orbslam2_rgbd_stream; do
             pixi exec -c "${{ github.workspace }}/channel" -c https://prefix.dev/conda-forge -c https://prefix.dev/vslamlab/vslamlab -s orbslam2 -- "$exe" --help
           done
 
